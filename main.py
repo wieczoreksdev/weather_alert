@@ -1,38 +1,38 @@
-# To run and test the code you need to update 4 places:
-# 1. Change MY_EMAIL/MY_PASSWORD to your own details.
-# 2. Go to your email provider and make it allow less secure apps.
-# 3. Update the SMTP ADDRESS to match your email provider.
-# 4. Update birthdays.csv to contain today's month and day.
-# See the solution video in the 100 Days of Python Course for explainations.
-
-
-from datetime import datetime
-import pandas
-import random
-import smtplib
 import os
 
-# import os and use it to get the Github repository secrets
-MY_EMAIL = os.environ.get("MY_EMAIL")
-MY_PASSWORD = os.environ.get("MY_PASSWORD")
+import requests
+import os
 
-today = datetime.now()
-today_tuple = (today.month, today.day)
+api_key = os.environ.get("API_KEY_OWM")
+auth_token = os.environ.get("AUTH_TWILIO_TOKEN")
+auth_twilio_sid = os.environ.get("AUTH_TWILIO_SID")
+lat ="41.716667"
+lon ="19.700000"
 
-data = pandas.read_csv("birthdays.csv")
-birthdays_dict = {(data_row["month"], data_row["day"])                  : data_row for (index, data_row) in data.iterrows()}
-if today_tuple in birthdays_dict:
-    birthday_person = birthdays_dict[today_tuple]
-    file_path = f"letter_templates/letter_{random.randint(1, 3)}.txt"
-    with open(file_path) as letter_file:
-        contents = letter_file.read()
-        contents = contents.replace("[NAME]", birthday_person["name"])
+url_forecast = "http://api.openweathermap.org/data/2.5/forecast"
+params_forecast = {
+    "lat": lat,
+    "lon": lon,
+    "appid": api_key,
+    "cnt": "4",
+    "units": "metric"
+}
+response3 = requests.get(
+    url=f"{url_forecast}",params=params_forecast)
 
-    with smtplib.SMTP("YOUR EMAIL PROVIDER SMTP SERVER ADDRESS") as connection:
-        connection.starttls()
-        connection.login(MY_EMAIL, MY_PASSWORD)
-        connection.sendmail(
-            from_addr=MY_EMAIL,
-            to_addrs=birthday_person["email"],
-            msg=f"Subject:Happy Birthday!\n\n{contents}"
-        )
+is_raining = False
+for item in response3.json()["list"]:
+    if int(item["weather"][0]["id"]) <= 700:
+        is_raining = True
+if is_raining:
+
+    from twilio.rest import Client
+    account_sid = auth_twilio_sid
+    auth_token = auth_token
+    client = Client(account_sid, auth_token)
+    message = client.messages.create(
+        from_='whatsapp:+14155238886',
+        body='Halo Sebciu, bedzie dzisiaj padac moze parasoleczka?☂️',
+        to='whatsapp:+48883815505'
+    )
+    print(message.sid)
