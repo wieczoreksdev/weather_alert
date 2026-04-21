@@ -6,6 +6,7 @@ import os
 api_key = os.environ.get("API_KEY_OWM")
 auth_token = os.environ.get("AUTH_TWILIO_TOKEN")
 auth_twilio_sid = os.environ.get("AUTH_TWILIO_SID")
+
 lat ="41.716667"
 lon ="19.700000"
 
